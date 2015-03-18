@@ -32,7 +32,7 @@ var _ = Describe("ServeHTTP", func() {
 		auth = testhelpers.LogAuthorizer{Result: testhelpers.AuthorizerResult{Authorized: true}}
 		adminAuth = testhelpers.AdminAuthorizer{Result: testhelpers.AuthorizerResult{Authorized: true}}
 
-		channelGroupConnector = &fakeChannelGroupConnector{messages: make(chan []byte, 10)}
+		channelGroupConnector = &fakeChannelGroupConnector{Messages: make(chan []byte, 10)}
 
 		proxy = dopplerproxy.NewDopplerProxy(
 			auth.Authorize,
@@ -151,7 +151,7 @@ var _ = Describe("ServeHTTP", func() {
 		})
 
 		It("connects to doppler servers without reconnecting for recentlogs", func() {
-			close(channelGroupConnector.messages)
+			close(channelGroupConnector.Messages)
 			req, _ := http.NewRequest("GET", "/apps/abc123/recentlogs", nil)
 			req.Header.Add("Authorization", "token")
 
@@ -161,7 +161,7 @@ var _ = Describe("ServeHTTP", func() {
 		})
 
 		It("connects to doppler servers without reconnecting for containermetrics", func() {
-			close(channelGroupConnector.messages)
+			close(channelGroupConnector.Messages)
 			req, _ := http.NewRequest("GET", "/apps/abc123/containermetrics", nil)
 			req.Header.Add("Authorization", "token")
 
@@ -171,9 +171,9 @@ var _ = Describe("ServeHTTP", func() {
 		})
 
 		It("passes messages back to the requestor", func() {
-			channelGroupConnector.messages <- []byte("hello")
-			channelGroupConnector.messages <- []byte("goodbye")
-			close(channelGroupConnector.messages)
+			channelGroupConnector.Messages <- []byte("hello")
+			channelGroupConnector.Messages <- []byte("goodbye")
+			close(channelGroupConnector.Messages)
 
 			req, _ := http.NewRequest("GET", "/apps/abc123/recentlogs", nil)
 			req.Header.Add("Authorization", "token")
@@ -194,6 +194,57 @@ var _ = Describe("ServeHTTP", func() {
 
 			Eventually(channelGroupConnector.Stopped).Should(BeTrue())
 		})
+
+		It("has the total number of messages sent on http connections", func() {
+			channelGroupConnector.Messages <- []byte("BaBatman")
+			channelGroupConnector.Messages <- []byte("RoRobin")
+			channelGroupConnector.Messages <- []byte("JoJoker")
+			close(channelGroupConnector.Messages)
+
+			req, _ := http.NewRequest("GET", "/apps/abc123/recentlogs", nil)
+			req.Header.Add("Authorization", "token")
+			proxy.ServeHTTP(recorder, req)
+
+			Eventually(proxy.TotalMessagesSent).Should(Equal(int64(3)))
+		})
+
+		It("has the total number of messages sent on http connection on multiple http endpoints", func() {
+			channelGroupConnector.Messages <- []byte("containerMetricMsg")
+			close(channelGroupConnector.Messages)
+
+			req, _ := http.NewRequest("GET", "/apps/abc123/containermetrics", nil)
+			req.Header.Add("Authorization", "token")
+			proxy.ServeHTTP(recorder, req)
+			Eventually(proxy.TotalMessagesSent).Should(Equal(int64(1)))
+
+			channelGroupConnector.Messages = make(chan []byte, 10)
+			channelGroupConnector.Messages <- []byte("RecentLogMsg1")
+			channelGroupConnector.Messages <- []byte("RecentLogMsg2")
+			close(channelGroupConnector.Messages)
+
+			req, _ = http.NewRequest("GET", "/apps/abc123/recentlogs", nil)
+			req.Header.Add("Authorization", "token")
+			proxy.ServeHTTP(recorder, req)
+
+			Eventually(proxy.TotalMessagesSent).Should(Equal(int64(3)))
+		})
+
+		//        FIt("has the total number of messages sent on web socket connection ", func() {
+		//            channelGroupConnector.Messages <- []byte("BaBatman")
+		//            channelGroupConnector.Messages <- []byte("RoRobin")
+		//            channelGroupConnector.Messages <- []byte("JoJoker")
+		//            close(channelGroupConnector.Messages)
+		//
+		//            req, _ := http.NewRequest("GET", "/apps/abc123/stream", nil)
+		//            req.Header.Add("Authorization", "token")
+		//            req.Header.Add("Sec-Websocket-Version", "13")
+		//            req.Header.Add("Connection", "upgrade")
+		//            req.Header.Add("Upgrade", "websocket")
+		//            req.Header.Add("Sec-Websocket-Key", "websocketKey")
+		//
+		//            proxy.ServeHTTP(recorder, req)
+		//            Eventually(proxy.TotalMessagesSent).Should(Equal(int64(3)))
+		//        })
 	})
 
 	Context("Firehose", func() {
@@ -410,7 +461,7 @@ var _ = Describe("DefaultHandlerProvider", func() {
 })
 
 type fakeChannelGroupConnector struct {
-	messages        chan []byte
+	Messages        chan []byte
 	dopplerEndpoint doppler_endpoint.DopplerEndpoint
 	stopped         bool
 	sync.Mutex
@@ -419,7 +470,7 @@ type fakeChannelGroupConnector struct {
 func (f *fakeChannelGroupConnector) Connect(dopplerEndpoint doppler_endpoint.DopplerEndpoint, messagesChan chan<- []byte, stopChan <-chan struct{}) {
 
 	go func() {
-		for m := range f.messages {
+		for m := range f.Messages {
 			messagesChan <- m
 		}
 		close(messagesChan)

@@ -38,6 +38,7 @@ var DefaultStoreAdapterProvider = func(urls []string, concurrentRequests int) st
 }
 
 var EtcdQueryInterval = 5 * time.Second
+var dopplerProxy *dopplerproxy.Proxy
 
 type Config struct {
 	EtcdUrls                  []string
@@ -131,7 +132,7 @@ func main() {
 	adapter := DefaultStoreAdapterProvider(config.EtcdUrls, config.EtcdMaxConcurrentRequests)
 	adapter.Connect()
 
-	dopplerProxy := makeDopplerProxy(adapter, config, logger)
+	dopplerProxy = makeDopplerProxy(adapter, config, logger)
 	startOutgoingDopplerProxy(net.JoinHostPort(dopplerProxy.IpAddress, strconv.FormatUint(uint64(config.OutgoingDropsondePort), 10)), dopplerProxy)
 
 	legacyProxy := makeLegacyProxy(adapter, config, logger)

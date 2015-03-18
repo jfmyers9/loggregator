@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 	"trafficcontroller/authorization"
 	"trafficcontroller/channel_group_connector"
@@ -27,6 +28,7 @@ type Proxy struct {
 	cookieDomain   string
 	logger         *gosteno.Logger
 	cfcomponent.Component
+	TotalMessagesSent int64
 }
 
 type RequestTranslator func(request *http.Request) (*http.Request, error)
@@ -179,6 +181,8 @@ func (proxy *Proxy) serveWithDoppler(writer http.ResponseWriter, request *http.R
 
 	handler := dopplerEndpoint.HProvider(messagesChan, proxy.logger)
 	handler.ServeHTTP(writer, request)
+
+	atomic.AddInt64(&proxy.TotalMessagesSent, handler.GetTotalMessagesSent())
 }
 
 func (proxy *Proxy) isAuthorized(authorizer Authorizer, appId, authToken string, clientAddress string) (bool, *logmessage.LogMessage) {
