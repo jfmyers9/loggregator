@@ -1,7 +1,7 @@
 ---
 name: syslog_drain_binder
 templates:
-  syslog_drain_binder_ctl.erb: bin/syslog_drain_binder_ctl
+  bpm.yml.erb: config/bpm.yml
   syslog_drain_binder.json.erb: config/syslog_drain_binder.json
   syslogdrainbinder.crt.erb: config/certs/syslogdrainbinder.crt
   syslogdrainbinder.key.erb: config/certs/syslogdrainbinder.key

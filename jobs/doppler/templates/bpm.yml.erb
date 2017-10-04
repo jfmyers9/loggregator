@@ -1,0 +1,14 @@
+---
+processes:
+- name: doppler
+  executable: /var/vcap/packages/doppler/doppler
+  args:
+  - --config
+  - /var/vcap/jobs/doppler/config/doppler.json
+  limits:
+    open_files: 65536
+    <% if_p("doppler.locked_memory_limit") do |value| %>
+    <% if value != "unlimited" %>
+    memory: <%= value %>K
+    <% end %>
+    <% end %>

@@ -9,7 +9,7 @@ provides:
   - metron_agent.listening_port
 
 templates:
-  metron_agent_ctl.erb: bin/metron_agent_ctl
+  bpm.yml.erb: config/bpm.yml
   metron_agent.json.erb: config/metron_agent.json
   metron_agent.crt.erb: config/certs/metron_agent.crt
   metron_agent.key.erb: config/certs/metron_agent.key

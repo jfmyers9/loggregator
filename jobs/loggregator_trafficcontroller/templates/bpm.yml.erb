@@ -1,0 +1,18 @@
+---
+processes:
+- name: loggregator_trafficcontroller
+  executable: /var/vcap/packages/loggregator_trafficcontroller/trafficcontroller
+  args:
+  <% if p("traffic_controller.disable_access_control") %>
+  - --disableAccessControl
+ <% end %>
+  - --config
+  - /var/vcap/jobs/loggregator_trafficcontroller/config/loggregator_trafficcontroller.json
+  env:
+  limits:
+    open_files: 65536
+    <% if_p("traffic_controller.locked_memory_limit") do |value| %>
+    <% if value != "unlimited" %>
+    memory: <%= value %>K
+    <% end %>
+    <% end %>

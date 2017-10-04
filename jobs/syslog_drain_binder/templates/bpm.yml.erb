@@ -1,0 +1,14 @@
+---
+processes:
+- name: syslog_drain_binder
+  executable: /var/vcap/packages/syslog_drain_binder/syslog_drain_binder
+  args:
+  - --config
+  - /var/vcap/jobs/syslog_drain_binder/config/syslog_drain_binder.json
+  limits:
+    open_files: 65536
+    <% if_p("syslog_drain_binder.locked_memory_limit") do |value| %>
+    <% if value != "unlimited" %>
+    memory: <%= value %>K
+    <% end %>
+    <% end %>

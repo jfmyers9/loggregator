@@ -1,7 +1,7 @@
 ---
 name: reverse_log_proxy
 templates:
-  reverse_log_proxy_ctl.erb: bin/reverse_log_proxy_ctl
+  bpm.yml.erb: config/bpm.yml
   reverse_log_proxy.crt.erb: config/certs/reverse_log_proxy.crt
   reverse_log_proxy.key.erb: config/certs/reverse_log_proxy.key
   mutual_tls_ca.crt.erb: config/certs/mutual_tls_ca.crt

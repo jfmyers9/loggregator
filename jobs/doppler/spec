@@ -2,7 +2,7 @@
 name: doppler
 
 templates:
-  doppler_ctl.erb: bin/doppler_ctl
+  bpm.yml.erb: config/bpm.yml
   doppler.json.erb: config/doppler.json
   doppler.crt.erb: config/certs/doppler.crt
   doppler.key.erb: config/certs/doppler.key

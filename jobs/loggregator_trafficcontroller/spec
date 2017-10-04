@@ -1,7 +1,7 @@
 ---
 name: loggregator_trafficcontroller
 templates:
-  loggregator_trafficcontroller_ctl.erb: bin/loggregator_trafficcontroller_ctl
+  bpm.yml.erb: config/bpm.yml
   loggregator_trafficcontroller.json.erb: config/loggregator_trafficcontroller.json
   trafficcontroller.crt.erb: config/certs/trafficcontroller.crt
   trafficcontroller.key.erb: config/certs/trafficcontroller.key

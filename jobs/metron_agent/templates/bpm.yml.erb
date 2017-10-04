@@ -1,0 +1,8 @@
+---
+processes:
+- name: metron_agent
+  executable: /var/vcap/packages/metron_agent/metron
+  args:
+  - --config
+  - /var/vcap/jobs/metron_agent/config/metron_agent.json
+
